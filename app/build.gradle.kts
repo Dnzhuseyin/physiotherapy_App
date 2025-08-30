@@ -1,9 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.hilt)
-    id("kotlin-kapt")
+    // alias(libs.plugins.hilt)
+    // id("kotlin-kapt")
 }
 
 android {
@@ -39,6 +38,9 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.4"
+    }
 }
 
 dependencies {
@@ -57,10 +59,10 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
     
-    // Room Database
+    // Room Database (Temporarily disabled KAPT for compatibility)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    // kapt(libs.androidx.room.compiler)
     
     // Networking
     implementation(libs.retrofit)
@@ -72,10 +74,10 @@ dependencies {
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
-    // Dependency Injection
-    implementation(libs.hilt.android)
-    implementation(libs.hilt.navigation.compose)
-    kapt(libs.hilt.compiler)
+    // Dependency Injection (Temporarily disabled for compatibility)
+    // implementation(libs.hilt.android)
+    // implementation(libs.hilt.navigation.compose)
+    // kapt(libs.hilt.compiler)
     
     // Video Player
     implementation(libs.exoplayer)
