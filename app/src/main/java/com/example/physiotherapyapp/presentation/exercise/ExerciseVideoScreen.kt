@@ -1,5 +1,6 @@
 package com.example.physiotherapyapp.presentation.exercise
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -9,191 +10,222 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.physiotherapyapp.navigation.Screen
-import com.example.physiotherapyapp.presentation.components.VideoPlayer
 
 @Composable
 fun ExerciseVideoScreen(
     exerciseId: String,
-    navController: NavController,
-    viewModel: ExerciseVideoViewModel = hiltViewModel()
+    navController: NavController
 ) {
-    val exercise by viewModel.exercise.collectAsState()
+    // Mock exercise data
+    val exercise = MockExercise(
+        id = exerciseId,
+        name = "Kol Fleksiyonu",
+        description = "Kolunuzu yukarı kaldırın ve indirin",
+        duration = 120,
+        difficulty = "Başlangıç",
+        bodyPart = "Kol",
+        points = 15
+    )
     
-    LaunchedEffect(exerciseId) {
-        viewModel.loadExercise(exerciseId)
-    }
+    val instructions = listOf(
+        "Kolunuzu yan tarafınızda tutun",
+        "Yavaşça yukarı kaldırın",
+        "90 dereceye geldiğinde durdurun",
+        "Yavaşça başlangıç pozisyonuna dönün"
+    )
     
-    exercise?.let { ex ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Header
+        Card(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         ) {
-            // Header
-            Card(
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = exercise.name,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Egzersiz Rehberi",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Video Player Placeholder
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(12.dp))
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .fillMaxSize()
+                    .background(Color.Black),
+                contentAlignment = Alignment.Center
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = ex.name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
+                    Icon(
+                        imageVector = Icons.Default.PlayCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = Color.White
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Egzersiz Rehberi",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Video Rehber",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-            
-            // Video Player
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(12.dp))
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Exercise Details
+        Card {
+            Column(
+                modifier = Modifier.padding(16.dp)
             ) {
-                VideoPlayer(
-                    videoUrl = ex.videoUrl,
-                    modifier = Modifier.fillMaxSize(),
-                    autoPlay = true
+                Text(
+                    text = "Egzersiz Bilgileri",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Exercise Details
-            Card {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text(
-                        text = "Egzersiz Bilgileri",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                    ExerciseInfoItem(
+                        icon = Icons.Default.Timer,
+                        label = "Süre",
+                        value = "${exercise.duration / 60} dk"
                     )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        ExerciseInfoItem(
-                            icon = Icons.Default.Timer,
-                            label = "Süre",
-                            value = "${ex.duration / 60} dk"
-                        )
-                        ExerciseInfoItem(
-                            icon = Icons.Default.FitnessCenter,
-                            label = "Zorluk",
-                            value = when (ex.difficulty) {
-                                com.example.physiotherapyapp.data.model.ExerciseDifficulty.BEGINNER -> "Başlangıç"
-                                com.example.physiotherapyapp.data.model.ExerciseDifficulty.INTERMEDIATE -> "Orta"
-                                com.example.physiotherapyapp.data.model.ExerciseDifficulty.ADVANCED -> "İleri"
-                            }
-                        )
-                        ExerciseInfoItem(
-                            icon = Icons.Default.EmojiEvents,
-                            label = "Puan",
-                            value = "${ex.points}p"
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Text(
-                        text = ex.description,
-                        style = MaterialTheme.typography.bodyMedium
+                    ExerciseInfoItem(
+                        icon = Icons.Default.Star,
+                        label = "Zorluk",
+                        value = exercise.difficulty
                     )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Instructions
-            Card {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Adım Adım Talimatlar",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                    ExerciseInfoItem(
+                        icon = Icons.Default.EmojiEvents,
+                        label = "Puan",
+                        value = "${exercise.points}p"
                     )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    ex.instructions.forEachIndexed { index, instruction ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .padding(4.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "${index + 1}",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = instruction,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            // Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Geri")
                 }
                 
-                Button(
-                    onClick = {
-                        navController.navigate(Screen.ExerciseSession.createRoute(ex.id))
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Başla")
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = exercise.description,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Instructions
+        Card {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Adım Adım Talimatlar",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                instructions.forEachIndexed { index, instruction ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "${index + 1}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.primaryContainer,
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .padding(8.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = instruction,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
+            }
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        // Action Buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Geri")
+            }
+            
+            Button(
+                onClick = {
+                    navController.navigate(Screen.ExerciseSession.createRoute(exercise.id))
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Başla")
             }
         }
     }
@@ -227,4 +259,3 @@ fun ExerciseInfoItem(
         )
     }
 }
-

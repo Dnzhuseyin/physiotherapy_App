@@ -1,5 +1,6 @@
 package com.example.physiotherapyapp.presentation.exercise
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,23 +17,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import com.example.physiotherapyapp.data.model.BodyPart
-import com.example.physiotherapyapp.data.model.Exercise
-import com.example.physiotherapyapp.data.model.ExerciseDifficulty
 import com.example.physiotherapyapp.navigation.Screen
 
 @Composable
-fun ExerciseSelectionScreen(
-    navController: NavController,
-    viewModel: ExerciseSelectionViewModel = hiltViewModel()
-) {
-    val exercises by viewModel.exercises.collectAsState()
-    val selectedExercises by viewModel.selectedExercises.collectAsState()
-    val selectedBodyPart by viewModel.selectedBodyPart.collectAsState()
-    val selectedDifficulty by viewModel.selectedDifficulty.collectAsState()
+fun ExerciseSelectionScreen(navController: NavController) {
+    var selectedBodyPart by remember { mutableStateOf<String?>(null) }
+    var selectedDifficulty by remember { mutableStateOf<String?>(null) }
+    var selectedExercises by remember { mutableStateOf(setOf<MockExercise>()) }
+    
+    val bodyParts = listOf("Tümü", "Kol", "Bacak", "Omuz", "Sırt", "Boyun", "Diz")
+    val difficulties = listOf("Tümü", "Başlangıç", "Orta", "İleri")
+    
+    val mockExercises = listOf(
+        MockExercise("1", "Kol Fleksiyonu", "Kolunuzu yukarı kaldırın ve indirin", 120, "Başlangıç", "Kol", 15),
+        MockExercise("2", "Bacak Ekstansiyonu", "Bacağınızı düz şekilde uzatın", 180, "Orta", "Bacak", 20),
+        MockExercise("3", "Omuz Rotasyonu", "Omzunuzu dairesel hareketle çevirin", 90, "Başlangıç", "Omuz", 12),
+        MockExercise("4", "Diz Fleksiyonu", "Dizinizi bükerek esneklik kazanın", 150, "Orta", "Diz", 18),
+        MockExercise("5", "Ayak Bileği Rotasyonu", "Ayak bileğinizi dairesel hareketle çevirin", 60, "Başlangıç", "Bacak", 10),
+        MockExercise("6", "İleri Seviye Kol Egzersizi", "Karmaşık kol hareketleri kombinasyonu", 240, "İleri", "Kol", 30)
+    )
+    
+    val filteredExercises = mockExercises.filter { exercise ->
+        (selectedBodyPart == null || selectedBodyPart == "Tümü" || exercise.bodyPart == selectedBodyPart) &&
+        (selectedDifficulty == null || selectedDifficulty == "Tümü" || exercise.difficulty == selectedDifficulty)
+    }
     
     Column(
         modifier = Modifier
@@ -48,26 +57,38 @@ fun ExerciseSelectionScreen(
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                Text(
-                    text = "Egzersiz Seçimi",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Yapmak istediğiniz egzersizleri seçin",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "Egzersiz Seçimi",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Yapmak istediğiniz egzersizleri seçin",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
         
         // Filters
         FilterSection(
+            bodyParts = bodyParts,
+            difficulties = difficulties,
             selectedBodyPart = selectedBodyPart,
             selectedDifficulty = selectedDifficulty,
-            onBodyPartSelected = viewModel::selectBodyPart,
-            onDifficultySelected = viewModel::selectDifficulty
+            onBodyPartSelected = { selectedBodyPart = it },
+            onDifficultySelected = { selectedDifficulty = it }
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -75,12 +96,12 @@ fun ExerciseSelectionScreen(
         // Selected Exercises Summary
         if (selectedExercises.isNotEmpty()) {
             SelectedExercisesCard(
-                selectedExercises = selectedExercises,
-                onRemoveExercise = viewModel::removeExercise,
+                selectedExercises = selectedExercises.toList(),
+                onRemoveExercise = { exercise ->
+                    selectedExercises = selectedExercises - exercise
+                },
                 onStartSession = {
-                    // Navigate to session with selected exercises
-                    val exerciseIds = selectedExercises.joinToString(",") { it.id }
-                    navController.navigate("exercise_session/$exerciseIds")
+                    navController.navigate(Screen.ExerciseSession.createRoute("selected"))
                 }
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -90,11 +111,17 @@ fun ExerciseSelectionScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(exercises) { exercise ->
+            items(filteredExercises) { exercise ->
                 ExerciseCard(
                     exercise = exercise,
                     isSelected = selectedExercises.contains(exercise),
-                    onToggleSelection = { viewModel.toggleExerciseSelection(exercise) },
+                    onToggleSelection = { 
+                        selectedExercises = if (selectedExercises.contains(exercise)) {
+                            selectedExercises - exercise
+                        } else {
+                            selectedExercises + exercise
+                        }
+                    },
                     onPreview = {
                         navController.navigate(Screen.ExerciseVideo.createRoute(exercise.id))
                     }
@@ -106,10 +133,12 @@ fun ExerciseSelectionScreen(
 
 @Composable
 fun FilterSection(
-    selectedBodyPart: BodyPart?,
-    selectedDifficulty: ExerciseDifficulty?,
-    onBodyPartSelected: (BodyPart?) -> Unit,
-    onDifficultySelected: (ExerciseDifficulty?) -> Unit
+    bodyParts: List<String>,
+    difficulties: List<String>,
+    selectedBodyPart: String?,
+    selectedDifficulty: String?,
+    onBodyPartSelected: (String?) -> Unit,
+    onDifficultySelected: (String?) -> Unit
 ) {
     Column {
         Text(
@@ -130,18 +159,11 @@ fun FilterSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 12.dp)
         ) {
-            item {
+            items(bodyParts) { bodyPart ->
                 FilterChip(
-                    onClick = { onBodyPartSelected(null) },
-                    label = { Text("Tümü") },
-                    selected = selectedBodyPart == null
-                )
-            }
-            items(BodyPart.values()) { bodyPart ->
-                FilterChip(
-                    onClick = { onBodyPartSelected(bodyPart) },
-                    label = { Text(getBodyPartDisplayName(bodyPart)) },
-                    selected = selectedBodyPart == bodyPart
+                    onClick = { onBodyPartSelected(if (bodyPart == "Tümü") null else bodyPart) },
+                    label = { Text(bodyPart) },
+                    selected = (bodyPart == "Tümü" && selectedBodyPart == null) || selectedBodyPart == bodyPart
                 )
             }
         }
@@ -156,18 +178,11 @@ fun FilterSection(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item {
+            items(difficulties) { difficulty ->
                 FilterChip(
-                    onClick = { onDifficultySelected(null) },
-                    label = { Text("Tümü") },
-                    selected = selectedDifficulty == null
-                )
-            }
-            items(ExerciseDifficulty.values()) { difficulty ->
-                FilterChip(
-                    onClick = { onDifficultySelected(difficulty) },
-                    label = { Text(getDifficultyDisplayName(difficulty)) },
-                    selected = selectedDifficulty == difficulty
+                    onClick = { onDifficultySelected(if (difficulty == "Tümü") null else difficulty) },
+                    label = { Text(difficulty) },
+                    selected = (difficulty == "Tümü" && selectedDifficulty == null) || selectedDifficulty == difficulty
                 )
             }
         }
@@ -177,7 +192,7 @@ fun FilterSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseCard(
-    exercise: Exercise,
+    exercise: MockExercise,
     isSelected: Boolean,
     onToggleSelection: () -> Unit,
     onPreview: () -> Unit
@@ -198,15 +213,21 @@ fun ExerciseCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
             ) {
-                // Exercise Image
-                AsyncImage(
-                    model = exercise.thumbnailUrl,
-                    contentDescription = exercise.name,
+                // Exercise Image Placeholder
+                Box(
                     modifier = Modifier
                         .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
                 
                 Spacer(modifier = Modifier.width(16.dp))
                 
@@ -236,8 +257,8 @@ fun ExerciseCard(
                             text = "${exercise.duration / 60}dk"
                         )
                         ExerciseDetailChip(
-                            icon = Icons.Default.FitnessCenter,
-                            text = getDifficultyDisplayName(exercise.difficulty)
+                            icon = Icons.Default.Star,
+                            text = exercise.difficulty
                         )
                         ExerciseDetailChip(
                             icon = Icons.Default.EmojiEvents,
@@ -320,8 +341,8 @@ fun ExerciseDetailChip(
 
 @Composable
 fun SelectedExercisesCard(
-    selectedExercises: List<Exercise>,
-    onRemoveExercise: (Exercise) -> Unit,
+    selectedExercises: List<MockExercise>,
+    onRemoveExercise: (MockExercise) -> Unit,
     onStartSession: () -> Unit
 ) {
     Card(
@@ -362,33 +383,6 @@ fun SelectedExercisesCard(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Selected exercises list
-            selectedExercises.forEach { exercise ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = exercise.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(
-                        onClick = { onRemoveExercise(exercise) }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Kaldır",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
             Button(
                 onClick = onStartSession,
                 modifier = Modifier.fillMaxWidth()
@@ -399,23 +393,12 @@ fun SelectedExercisesCard(
     }
 }
 
-private fun getBodyPartDisplayName(bodyPart: BodyPart): String {
-    return when (bodyPart) {
-        BodyPart.ARM -> "Kol"
-        BodyPart.LEG -> "Bacak"
-        BodyPart.SHOULDER -> "Omuz"
-        BodyPart.BACK -> "Sırt"
-        BodyPart.NECK -> "Boyun"
-        BodyPart.KNEE -> "Diz"
-        BodyPart.ANKLE -> "Ayak Bileği"
-    }
-}
-
-private fun getDifficultyDisplayName(difficulty: ExerciseDifficulty): String {
-    return when (difficulty) {
-        ExerciseDifficulty.BEGINNER -> "Başlangıç"
-        ExerciseDifficulty.INTERMEDIATE -> "Orta"
-        ExerciseDifficulty.ADVANCED -> "İleri"
-    }
-}
-
+data class MockExercise(
+    val id: String,
+    val name: String,
+    val description: String,
+    val duration: Int,
+    val difficulty: String,
+    val bodyPart: String,
+    val points: Int
+)

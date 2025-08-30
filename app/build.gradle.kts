@@ -1,8 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    // alias(libs.plugins.hilt)
-    // id("kotlin-kapt")
 }
 
 android {
@@ -41,6 +39,12 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
     }
+    
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            freeCompilerArgs += "-Xsuppress-version-warnings"
+        }
+    }
 }
 
 dependencies {
@@ -58,47 +62,6 @@ dependencies {
     
     // Navigation
     implementation(libs.androidx.navigation.compose)
-    
-    // Room Database (Temporarily disabled KAPT for compatibility)
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    // kapt(libs.androidx.room.compiler)
-    
-    // Networking
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging)
-    implementation(libs.gson)
-    
-    // ViewModel
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    
-    // Dependency Injection (Temporarily disabled for compatibility)
-    // implementation(libs.hilt.android)
-    // implementation(libs.hilt.navigation.compose)
-    // kapt(libs.hilt.compiler)
-    
-    // Video Player
-    implementation(libs.exoplayer)
-    
-    // UI Components
-    implementation(libs.accompanist.systemuicontroller)
-    
-    // Permissions
-    implementation(libs.accompanist.permissions)
-    
-    // Coroutines
-    implementation(libs.kotlinx.coroutines.android)
-    
-    // DataStore
-    implementation(libs.androidx.datastore.preferences)
-    
-    // Lottie Animations
-    implementation(libs.lottie.compose)
-    
-    // Image Loading
-    implementation(libs.coil.compose)
     
     // Testing
     testImplementation(libs.junit)

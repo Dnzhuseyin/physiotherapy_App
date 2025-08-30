@@ -17,17 +17,31 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 
 @Composable
-fun ProfileScreen(
-    navController: NavController,
-    viewModel: ProfileViewModel = hiltViewModel()
-) {
-    val user by viewModel.user.collectAsState()
-    val recentSessions by viewModel.recentSessions.collectAsState()
-    val achievements by viewModel.recentAchievements.collectAsState()
+fun ProfileScreen(navController: NavController) {
+    val user = ProfileUser(
+        name = "Kullanıcı Adı",
+        level = 5,
+        totalPoints = 1250,
+        pointsToNextLevel = 250,
+        levelProgress = 0.75f,
+        totalSessions = 24,
+        totalExercises = 48,
+        averageAccuracy = 85.5f
+    )
+    
+    val recentSessions = listOf(
+        ProfileSession("Kol Fleksiyonu", "2 gün önce", 85, 88.5f),
+        ProfileSession("Bacak Ekstansiyonu", "3 gün önce", 92, 91.2f),
+        ProfileSession("Omuz Rotasyonu", "5 gün önce", 78, 82.3f),
+        ProfileSession("Diz Fleksiyonu", "1 hafta önce", 89, 86.7f)
+    )
+    
+    val achievements = listOf(
+        "İlk Adım", "Puan Toplayıcısı", "Tutarlılık"
+    )
     
     LazyColumn(
         modifier = Modifier
@@ -36,34 +50,49 @@ fun ProfileScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            // Profile Header
-            user?.let { userData ->
-                ProfileHeader(user = userData)
+            // Header
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Profil",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
+        }
+        
+        item {
+            // Profile Header
+            ProfileHeader(user = user)
         }
         
         item {
             // Statistics Overview
-            user?.let { userData ->
-                StatisticsOverview(user = userData)
-            }
+            StatisticsOverview(user = user)
         }
         
         item {
             // Recent Achievements
-            if (achievements.isNotEmpty()) {
-                RecentAchievementsSection(
-                    achievements = achievements,
-                    onViewAll = { navController.navigate("achievements") }
-                )
-            }
+            RecentAchievementsSection(achievements = achievements)
         }
         
         item {
             // Recent Sessions
-            if (recentSessions.isNotEmpty()) {
-                RecentSessionsSection(sessions = recentSessions)
-            }
+            RecentSessionsSection(sessions = recentSessions)
         }
         
         item {
@@ -193,7 +222,7 @@ fun StatisticsOverview(user: ProfileUser) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 StatisticItem(
-                    icon = Icons.Default.FitnessCenter,
+                    icon = Icons.Default.PlayArrow,
                     value = user.totalSessions.toString(),
                     label = "Toplam Seans",
                     color = Color(0xFF4CAF50)
@@ -248,15 +277,9 @@ fun StatisticItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecentAchievementsSection(
-    achievements: List<ProfileAchievement>,
-    onViewAll: () -> Unit
-) {
-    Card(
-        onClick = onViewAll
-    ) {
+fun RecentAchievementsSection(achievements: List<String>) {
+    Card {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -302,7 +325,7 @@ fun RecentAchievementsSection(
 }
 
 @Composable
-fun AchievementBadge(achievement: ProfileAchievement) {
+fun AchievementBadge(achievement: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(80.dp)
@@ -325,7 +348,7 @@ fun AchievementBadge(achievement: ProfileAchievement) {
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = achievement.title,
+            text = achievement,
             style = MaterialTheme.typography.bodySmall,
             maxLines = 2,
             fontWeight = FontWeight.Medium
@@ -366,7 +389,7 @@ fun SessionItem(session: ProfileSession) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Default.FitnessCenter,
+            imageVector = Icons.Default.PlayArrow,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary
         )
@@ -427,7 +450,7 @@ fun SettingsSection() {
             )
             
             SettingItem(
-                icon = Icons.Default.Security,
+                icon = Icons.Default.Lock,
                 title = "Gizlilik",
                 subtitle = "Veri güvenliği ayarları"
             )
@@ -510,15 +533,9 @@ data class ProfileUser(
     val averageAccuracy: Float
 )
 
-data class ProfileAchievement(
-    val title: String,
-    val description: String
-)
-
 data class ProfileSession(
     val exerciseName: String,
     val date: String,
     val score: Int,
     val accuracy: Float
 )
-

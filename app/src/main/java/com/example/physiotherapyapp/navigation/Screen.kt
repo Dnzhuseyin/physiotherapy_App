@@ -16,4 +16,3 @@ sealed class Screen(val route: String) {
     object Leaderboard : Screen("leaderboard")
     object Achievements : Screen("achievements")
 }
-

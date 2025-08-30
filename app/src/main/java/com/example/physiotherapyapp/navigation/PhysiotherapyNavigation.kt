@@ -38,7 +38,7 @@ fun PhysiotherapyNavigation(navController: NavHostController) {
         }
         
         composable(Screen.ExerciseVideo.route) { backStackEntry ->
-            val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
+            val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: "1"
             ExerciseVideoScreen(
                 exerciseId = exerciseId,
                 navController = navController
@@ -46,7 +46,7 @@ fun PhysiotherapyNavigation(navController: NavHostController) {
         }
         
         composable(Screen.ExerciseSession.route) { backStackEntry ->
-            val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
+            val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: "1"
             ExerciseSessionScreen(
                 exerciseId = exerciseId,
                 navController = navController
@@ -70,4 +70,3 @@ fun PhysiotherapyNavigation(navController: NavHostController) {
         }
     }
 }
-

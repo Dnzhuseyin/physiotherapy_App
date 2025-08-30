@@ -3,6 +3,8 @@ package com.example.physiotherapyapp.presentation.leaderboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,17 +18,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 
 @Composable
-fun LeaderboardScreen(
-    navController: NavController,
-    viewModel: LeaderboardViewModel = hiltViewModel()
-) {
-    val leaderboardData by viewModel.leaderboardData.collectAsState()
-    val currentUser by viewModel.currentUser.collectAsState()
-    val selectedPeriod by viewModel.selectedPeriod.collectAsState()
+fun LeaderboardScreen(navController: NavController) {
+    var selectedPeriod by remember { mutableStateOf("Aylık") }
+    
+    val periods = listOf("Haftalık", "Aylık", "Tüm Zamanlar")
+    
+    val leaderboardData = listOf(
+        LeaderboardUser("1", "Ahmet Yılmaz", 2150, 8, 92.5f, 1),
+        LeaderboardUser("2", "Ayşe Demir", 1980, 7, 89.3f, 2),
+        LeaderboardUser("3", "Mehmet Kaya", 1875, 6, 91.2f, 3),
+        LeaderboardUser("current", "Sen", 1250, 5, 85.5f, 4),
+        LeaderboardUser("5", "Fatma Özkan", 1180, 5, 88.7f, 5),
+        LeaderboardUser("6", "Ali Şahin", 1120, 4, 84.2f, 6),
+        LeaderboardUser("7", "Zeynep Acar", 1050, 4, 86.9f, 7),
+        LeaderboardUser("8", "Mustafa Çelik", 980, 4, 83.1f, 8),
+        LeaderboardUser("9", "Elif Yıldız", 920, 3, 87.4f, 9),
+        LeaderboardUser("10", "Osman Koç", 890, 3, 82.8f, 10)
+    )
     
     LazyColumn(
         modifier = Modifier
@@ -42,31 +53,49 @@ fun LeaderboardScreen(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = "Sıralama Listesi",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Diğer kullanıcılarla yarışın ve en iyiler arasına girin",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Sıralama Listesi",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Diğer kullanıcılarla yarışın",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }
         
         item {
             // Period Filter
-            PeriodFilterRow(
-                selectedPeriod = selectedPeriod,
-                onPeriodSelected = viewModel::selectPeriod
-            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(periods) { period ->
+                    FilterChip(
+                        onClick = { selectedPeriod = period },
+                        label = { Text(period) },
+                        selected = selectedPeriod == period
+                    )
+                }
+            }
         }
         
         item {
             // Current User Position
+            val currentUser = leaderboardData.find { it.id == "current" }
             currentUser?.let { user ->
                 CurrentUserCard(user = user)
             }
@@ -88,27 +117,7 @@ fun LeaderboardScreen(
             LeaderboardItem(
                 user = user,
                 rank = index + 4,
-                isCurrentUser = user.id == currentUser?.id
-            )
-        }
-    }
-}
-
-@Composable
-fun PeriodFilterRow(
-    selectedPeriod: LeaderboardPeriod,
-    onPeriodSelected: (LeaderboardPeriod) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        LeaderboardPeriod.values().forEach { period ->
-            FilterChip(
-                onClick = { onPeriodSelected(period) },
-                label = { Text(period.displayName) },
-                selected = selectedPeriod == period,
-                modifier = Modifier.weight(1f)
+                isCurrentUser = user.id == "current"
             )
         }
     }
@@ -381,12 +390,6 @@ fun LeaderboardItem(
     }
 }
 
-enum class LeaderboardPeriod(val displayName: String) {
-    WEEKLY("Haftalık"),
-    MONTHLY("Aylık"),
-    ALL_TIME("Tüm Zamanlar")
-}
-
 data class LeaderboardUser(
     val id: String,
     val name: String,
@@ -395,4 +398,3 @@ data class LeaderboardUser(
     val accuracy: Float,
     val rank: Int
 )
-

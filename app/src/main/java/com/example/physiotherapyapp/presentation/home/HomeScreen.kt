@@ -20,12 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.physiotherapyapp.navigation.Screen
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
     val menuItems = listOf(
         HomeMenuItem(
-            icon = Icons.Default.Bluetooth,
+            icon = Icons.Default.Settings,
             title = "Cihaz Bağlantısı",
             subtitle = "Fizik tedavi cihazınızı bağlayın",
             route = Screen.DeviceConnection.route,
@@ -34,7 +33,7 @@ fun HomeScreen(navController: NavController) {
             )
         ),
         HomeMenuItem(
-            icon = Icons.Default.FitnessCenter,
+            icon = Icons.Default.PlayArrow,
             title = "Egzersizler",
             subtitle = "Egzersizleri seçin ve başlayın",
             route = Screen.ExerciseSelection.route,
@@ -43,7 +42,7 @@ fun HomeScreen(navController: NavController) {
             )
         ),
         HomeMenuItem(
-            icon = Icons.Default.Analytics,
+            icon = Icons.Default.Info,
             title = "İstatistikler",
             subtitle = "İlerlemenizi takip edin",
             route = Screen.Statistics.route,
@@ -52,7 +51,7 @@ fun HomeScreen(navController: NavController) {
             )
         ),
         HomeMenuItem(
-            icon = Icons.Default.EmojiEvents,
+            icon = Icons.Default.Star,
             title = "Başarımlar",
             subtitle = "Rozetlerinizi görüntüleyin",
             route = Screen.Achievements.route,
@@ -61,7 +60,7 @@ fun HomeScreen(navController: NavController) {
             )
         ),
         HomeMenuItem(
-            icon = Icons.Default.Leaderboard,
+            icon = Icons.Default.List,
             title = "Sıralama",
             subtitle = "Diğer kullanıcılarla yarışın",
             route = Screen.Leaderboard.route,
@@ -193,4 +192,3 @@ data class HomeMenuItem(
     val route: String,
     val gradient: Brush
 )
-

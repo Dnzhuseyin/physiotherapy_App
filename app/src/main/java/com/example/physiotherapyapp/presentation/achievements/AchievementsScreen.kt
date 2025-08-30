@@ -1,5 +1,6 @@
 package com.example.physiotherapyapp.presentation.achievements
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,16 +15,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 
 @Composable
-fun AchievementsScreen(
-    navController: NavController,
-    viewModel: AchievementsViewModel = hiltViewModel()
-) {
-    val achievements by viewModel.achievements.collectAsState()
-    val userProgress by viewModel.userProgress.collectAsState()
+fun AchievementsScreen(navController: NavController) {
+    val achievements = listOf(
+        MockAchievement("1", "İlk Adım", "İlk egzersiz seansınızı tamamlayın", true, 100),
+        MockAchievement("2", "Puan Toplayıcısı", "100 puan toplayın", true, 100),
+        MockAchievement("3", "Tutarlılık Ustası", "10 egzersiz seansı tamamlayın", false, 60),
+        MockAchievement("4", "Doğruluk Uzmanı", "90% doğruluk oranına ulaşın", false, 75),
+        MockAchievement("5", "Egzersiz Tutkunu", "50 farklı egzersiz yapın", false, 30),
+        MockAchievement("6", "Puan Ustası", "1000 puan toplayın", false, 80),
+        MockAchievement("7", "Adanmışlık Şampiyonu", "30 gün üst üste egzersiz yapın", false, 20),
+        MockAchievement("8", "Mükemmeliyetçi", "95% doğruluk oranına ulaşın", false, 10),
+        MockAchievement("9", "Maraton Koşucusu", "100 egzersiz seansı tamamlayın", false, 40),
+        MockAchievement("10", "Efsane", "Tüm egzersizleri mükemmel doğrulukla tamamlayın", false, 5)
+    )
     
     LazyColumn(
         modifier = Modifier
@@ -39,17 +46,27 @@ fun AchievementsScreen(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = "Başarımlar",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Rozetlerinizi kazanın ve ilerlemenizi takip edin",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Başarımlar",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Rozetlerinizi kazanın ve ilerlemenizi takip edin",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -58,17 +75,12 @@ fun AchievementsScreen(
             // Progress Summary
             ProgressSummaryCard(
                 unlockedCount = achievements.count { it.isUnlocked },
-                totalCount = achievements.size,
-                currentPoints = userProgress.totalPoints,
-                currentLevel = userProgress.level
+                totalCount = achievements.size
             )
         }
         
         items(achievements) { achievement ->
-            AchievementCard(
-                achievement = achievement,
-                userProgress = userProgress
-            )
+            AchievementCard(achievement = achievement)
         }
     }
 }
@@ -76,9 +88,7 @@ fun AchievementsScreen(
 @Composable
 fun ProgressSummaryCard(
     unlockedCount: Int,
-    totalCount: Int,
-    currentPoints: Int,
-    currentLevel: Int
+    totalCount: Int
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -121,13 +131,13 @@ fun ProgressSummaryCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Seviye $currentLevel",
+                            text = "Seviye 5",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Text(
-                        text = "$currentPoints puan",
+                        text = "1250 puan",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -156,26 +166,10 @@ fun ProgressSummaryCard(
 }
 
 @Composable
-fun AchievementCard(
-    achievement: com.example.physiotherapyapp.data.model.Achievement,
-    userProgress: UserProgress
-) {
-    val isUnlocked = achievement.isUnlocked
-    val progress = when (achievement.type) {
-        com.example.physiotherapyapp.data.model.AchievementType.POINTS -> 
-            (userProgress.totalPoints.toFloat() / achievement.pointsRequired).coerceAtMost(1f)
-        com.example.physiotherapyapp.data.model.AchievementType.SESSIONS -> 
-            (userProgress.totalSessions.toFloat() / achievement.pointsRequired).coerceAtMost(1f)
-        com.example.physiotherapyapp.data.model.AchievementType.EXERCISES -> 
-            (userProgress.totalExercises.toFloat() / achievement.pointsRequired).coerceAtMost(1f)
-        com.example.physiotherapyapp.data.model.AchievementType.ACCURACY -> 
-            (userProgress.averageAccuracy / achievement.pointsRequired).coerceAtMost(1f)
-        else -> if (isUnlocked) 1f else 0f
-    }
-    
+fun AchievementCard(achievement: MockAchievement) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = if (isUnlocked) 
+            containerColor = if (achievement.isUnlocked) 
                 Color(0xFFFFD700).copy(alpha = 0.1f) 
             else 
                 MaterialTheme.colorScheme.surface
@@ -191,13 +185,22 @@ fun AchievementCard(
             Box(
                 modifier = Modifier
                     .size(60.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        if (achievement.isUnlocked) 
+                            Color(0xFFFFD700).copy(alpha = 0.2f)
+                        else 
+                            MaterialTheme.colorScheme.surfaceVariant
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = getAchievementIcon(achievement.type),
+                    imageVector = Icons.Default.EmojiEvents,
                     contentDescription = null,
-                    tint = if (isUnlocked) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    tint = if (achievement.isUnlocked) 
+                        Color(0xFFFFD700) 
+                    else 
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.size(36.dp)
                 )
             }
@@ -212,7 +215,10 @@ fun AchievementCard(
                     text = achievement.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isUnlocked) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurface
+                    color = if (achievement.isUnlocked) 
+                        Color(0xFFFFD700) 
+                    else 
+                        MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -221,12 +227,12 @@ fun AchievementCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                if (!isUnlocked) {
+                if (!achievement.isUnlocked) {
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     // Progress bar for locked achievements
                     LinearProgressIndicator(
-                        progress = progress,
+                        progress = achievement.progress / 100f,
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -234,7 +240,7 @@ fun AchievementCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     
                     Text(
-                        text = getProgressText(achievement, userProgress),
+                        text = "${achievement.progress}% tamamlandı",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -242,7 +248,7 @@ fun AchievementCard(
             }
             
             // Status indicator
-            if (isUnlocked) {
+            if (achievement.isUnlocked) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Kazanıldı",
@@ -251,7 +257,7 @@ fun AchievementCard(
                 )
             } else {
                 CircularProgressIndicator(
-                    progress = progress,
+                    progress = achievement.progress / 100f,
                     modifier = Modifier.size(24.dp),
                     strokeWidth = 2.dp
                 )
@@ -260,39 +266,10 @@ fun AchievementCard(
     }
 }
 
-private fun getAchievementIcon(type: com.example.physiotherapyapp.data.model.AchievementType): androidx.compose.ui.graphics.vector.ImageVector {
-    return when (type) {
-        com.example.physiotherapyapp.data.model.AchievementType.POINTS -> Icons.Default.EmojiEvents
-        com.example.physiotherapyapp.data.model.AchievementType.SESSIONS -> Icons.Default.FitnessCenter
-        com.example.physiotherapyapp.data.model.AchievementType.EXERCISES -> Icons.Default.DirectionsRun
-        com.example.physiotherapyapp.data.model.AchievementType.ACCURACY -> Icons.Default.TrendingUp
-        com.example.physiotherapyapp.data.model.AchievementType.STREAK -> Icons.Default.Whatshot
-        com.example.physiotherapyapp.data.model.AchievementType.SPECIAL -> Icons.Default.Star
-    }
-}
-
-private fun getProgressText(
-    achievement: com.example.physiotherapyapp.data.model.Achievement,
-    userProgress: UserProgress
-): String {
-    return when (achievement.type) {
-        com.example.physiotherapyapp.data.model.AchievementType.POINTS -> 
-            "${userProgress.totalPoints}/${achievement.pointsRequired} puan"
-        com.example.physiotherapyapp.data.model.AchievementType.SESSIONS -> 
-            "${userProgress.totalSessions}/${achievement.pointsRequired} seans"
-        com.example.physiotherapyapp.data.model.AchievementType.EXERCISES -> 
-            "${userProgress.totalExercises}/${achievement.pointsRequired} egzersiz"
-        com.example.physiotherapyapp.data.model.AchievementType.ACCURACY -> 
-            "${userProgress.averageAccuracy.toInt()}%/${achievement.pointsRequired}% doğruluk"
-        else -> "İlerleme takip ediliyor"
-    }
-}
-
-data class UserProgress(
-    val totalPoints: Int,
-    val totalSessions: Int,
-    val totalExercises: Int,
-    val averageAccuracy: Float,
-    val level: Int
+data class MockAchievement(
+    val id: String,
+    val title: String,
+    val description: String,
+    val isUnlocked: Boolean,
+    val progress: Int
 )
-
