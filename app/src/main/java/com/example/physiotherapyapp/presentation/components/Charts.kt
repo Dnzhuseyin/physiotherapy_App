@@ -222,7 +222,7 @@ fun BarChart(
                         x + barWidth / 2,
                         size.height - barHeight - 10.dp.toPx(),
                         android.graphics.Paint().apply {
-                            color = bar.color.toArgb()
+                            color = androidx.compose.ui.graphics.toArgb(bar.color)
                             textAlign = android.graphics.Paint.Align.CENTER
                             textSize = 12.dp.toPx()
                         }

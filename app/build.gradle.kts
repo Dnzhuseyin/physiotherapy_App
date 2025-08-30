@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kotlin.kapt)
+    id("kotlin-kapt")
 }
 
 android {
@@ -80,8 +80,8 @@ dependencies {
     // Video Player
     implementation(libs.exoplayer)
     
-    // Charts
-    implementation(libs.charts)
+    // UI Components
+    implementation(libs.accompanist.systemuicontroller)
     
     // Permissions
     implementation(libs.accompanist.permissions)
@@ -94,6 +94,9 @@ dependencies {
     
     // Lottie Animations
     implementation(libs.lottie.compose)
+    
+    // Image Loading
+    implementation(libs.coil.compose)
     
     // Testing
     testImplementation(libs.junit)
